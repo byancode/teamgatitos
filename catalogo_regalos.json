@@ -60,6 +60,11 @@
         "diamonds": 1
     },
     {
+        "id": 41837,
+        "name": "Gatitos Miau",
+        "diamonds": 1
+    },
+    {
         "id": 5487,
         "name": "Finger Heart",
         "diamonds": 5
@@ -72,6 +77,11 @@
     {
         "id": 105781,
         "name": "Spinning Soccer",
+        "diamonds": 5
+    },
+    {
+        "id": 19447,
+        "name": "Overreact",
         "diamonds": 5
     },
     {
@@ -105,6 +115,11 @@
         "diamonds": 10
     },
     {
+        "id": 5576,
+        "name": "Heart",
+        "diamonds": 10
+    },
+    {
         "id": 19443,
         "name": "Bravo!",
         "diamonds": 15
@@ -126,6 +141,11 @@
     },
     {
         "id": 17490,
+        "name": "Capybara",
+        "diamonds": 30
+    },
+    {
+        "id": 14488,
         "name": "Capybara",
         "diamonds": 30
     },
@@ -180,6 +200,11 @@
         "diamonds": 199
     },
     {
+        "id": "12505",
+        "name": "Gold Medal",
+        "diamonds": 200
+    },
+    {
         "id": 18741,
         "name": "Cat",
         "diamonds": 222
@@ -187,6 +212,11 @@
     {
         "id": 6007,
         "name": "Boxing Gloves",
+        "diamonds": 299
+    },
+    {
+        "id": 6267,
+        "name": "Corgi",
         "diamonds": 299
     },
     {

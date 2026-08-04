@@ -110,7 +110,7 @@
     <div id="bloque-salvar">
         <div class="avatar-container">
             <div class="halo"></div>
-            <img src="" class="avatar avatar-salvar" id="avatar-salvar" onerror="this.src='https://via.placeholder.com/150/222/fff?text=?'">
+            <img src="" class="avatar avatar-salvar" id="avatar-salvar" onerror="this.src='https://www.gravatar.com/avatar/150/222/fff?text=?'">
             <div class="heavy-text coins-badge" id="coins-salvar"></div>
         </div>
         <div class="heavy-text name" id="name-salvar">ESPERANDO</div>
@@ -125,16 +125,17 @@
             </svg>
             <div class="tail"><i class="fa-solid fa-arrow-trend-down"></i></div>
             
-            <img src="" class="avatar avatar-reiniciar" id="avatar-reiniciar" onerror="this.src='https://via.placeholder.com/150/222/fff?text=?'">
+            <img src="" class="avatar avatar-reiniciar" id="avatar-reiniciar" onerror="this.src='https://www.gravatar.com/avatar/150/222/fff?text=?'">
             <div class="heavy-text coins-badge" id="coins-reiniciar"></div>
         </div>
         <div class="heavy-text name name-reiniciar" id="name-reiniciar">ESPERANDO</div>
         <div class="heavy-text wins-text wins-reiniciar" id="wins-reiniciar">0 REINICIOS</div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://localhost:23847/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        const baseUrl = 'ws://localhost:23847/';
+const socket = io(baseUrl);
         let configOpciones = { showName: true, showCount: true, showCoins: true };
         let histData = { salvadas: {}, reinicios: {} };
         let currentSalvar = null;

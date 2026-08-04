@@ -48,9 +48,10 @@
         <span id="meta-text">0K LIKES</span>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://localhost:23847/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        const baseUrl = 'ws://localhost:23847/';
+        const socket = io(baseUrl);
         const container = document.getElementById('meta-container');
         const metaText = document.getElementById('meta-text');
         

@@ -65,9 +65,15 @@
         </div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://localhost:23847/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        const baseUrl = 'ws://localhost:23847/';
+        const socket = io(baseUrl, {
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+            reconnectionAttempts: 10,
+            timeout: 8000
+        });
         let catalogoActual = []; 
 
         socket.on('config_actual', (config) => {

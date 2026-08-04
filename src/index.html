@@ -41,6 +41,7 @@
         <div class="menu-group">Acciones y Eventos</div>
         <div class="menu-item active" onclick="showTab('tab-conexion', this)"><i class="fa-solid fa-wifi"></i> Conexión a TikTok</div>
         <div class="menu-item" onclick="showTab('tab-regalos', this)"><i class="fa-solid fa-gift"></i> Gestor de Regalos</div>
+        <div class="menu-item" onclick="showTab('tab-configuracion', this)"><i class="fa-solid fa-gear"></i> Configuración</div>
         
         <div class="menu-group">Overlays Web</div>
         <div class="menu-item" onclick="showTab('tab-batalla', this)"><i class="fa-solid fa-khanda"></i> Batalla de Equipos</div>
@@ -72,19 +73,21 @@
             </div>
         </div>
 
-        <iframe id="tab-batalla" class="tab-content" src="/vista_versus"></iframe>
-        <iframe id="tab-racha" class="tab-content" src="/vista_racha"></iframe>
-        <iframe id="tab-racha-versus" class="tab-content" src="/vista_racha_versus"></iframe>
-        <iframe id="tab-top-likes" class="tab-content" src="/vista_top_likes"></iframe>
-        <iframe id="tab-top-vip" class="tab-content" src="/vista_top_donadores"></iframe>
-        <iframe id="tab-regalos" class="tab-content" src="/vista_regalos"></iframe>
-        <iframe id="tab-metalikes" class="tab-content" src="/vista_meta_likes"></iframe>
-        <iframe id="tab-bolita" class="tab-content" src="/vista_bolita_globos"></iframe>
+        <iframe id="tab-batalla" class="tab-content" src="/vistas/vista_versus.html"></iframe>
+        <iframe id="tab-racha" class="tab-content" src="/vistas/vista_racha.html"></iframe>
+        <iframe id="tab-racha-versus" class="tab-content" src="/vistas/vista_racha_versus.html"></iframe>
+        <iframe id="tab-top-likes" class="tab-content" src="/vistas/vista_top_likes.html"></iframe>
+        <iframe id="tab-top-vip" class="tab-content" src="/vistas/vista_top_donadores.html"></iframe>
+        <iframe id="tab-regalos" class="tab-content" src="/vistas/vista_regalos.html"></iframe>
+        <iframe id="tab-configuracion" class="tab-content" src="/vistas/vista_configuracion.html"></iframe>
+        <iframe id="tab-metalikes" class="tab-content" src="/vistas/vista_meta_likes.html"></iframe>
+        <iframe id="tab-bolita" class="tab-content" src="/vistas/vista_bolita_globos.html"></iframe>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://localhost:23847/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        const baseUrl = 'ws://localhost:23847/';
+        const socket = io(baseUrl);
         const inputUsuario = document.getElementById('input-usuario');
         const estadoBar = document.getElementById('conexion-estado');
         const sidebarStatus = document.getElementById('sidebar-status');

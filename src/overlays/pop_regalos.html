@@ -42,9 +42,10 @@
 </head>
 <body>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://localhost:23847/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        const baseUrl = 'ws://localhost:23847/';
+const socket = io(baseUrl);
         let audioCtx = null;
 
         // Variables para guardar los nombres y colores desde el servidor

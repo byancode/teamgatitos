@@ -189,17 +189,23 @@
 
         <div class="overlay-bar">
             <button class="btn-overlay" onclick="window.open('/versus', '_blank')"><i class="fa-solid fa-eye"></i> Abrir Batalla</button>
-            <button class="btn-overlay" style="color:#ffd700; border-color:#ffd700;" onclick="copiarURL('/versus')"><i class="fa-solid fa-link"></i> URL Batalla</button>
-            <button class="btn-overlay" style="color:#b3e5fc; border-color:#b3e5fc;" onclick="window.open('/pop_regalos', '_blank')"><i class="fa-solid fa-eye"></i> Abrir Regalos Pop</button>
-            <button class="btn-overlay" style="color:#ff99cc; border-color:#ff99cc;" onclick="copiarURL('/pop_regalos')"><i class="fa-solid fa-link"></i> URL Regalos Pop</button>
+            <button class="btn-overlay" style="color:#ffd700; border-color:#ffd700;" onclick="copiarURL('/overlays/versus.html')"><i class="fa-solid fa-link"></i> URL Batalla</button>
+            <button class="btn-overlay" style="color:#b3e5fc; border-color:#b3e5fc;" onclick="window.open('/overlays/pop_regalos.html', '_blank')"><i class="fa-solid fa-eye"></i> Abrir Regalos Pop</button>
+            <button class="btn-overlay" style="color:#ff99cc; border-color:#ff99cc;" onclick="copiarURL('/overlays/pop_regalos.html')"><i class="fa-solid fa-link"></i> URL Regalos Pop</button>
         </div>
         
         <p id="mensaje" style="color:#00ff66; text-align:center; display:none; font-weight:bold;">✅ ¡Guardado y Aplicado!</p>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://localhost:23847/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        const baseUrl = 'ws://localhost:23847/';
+        const socket = io(baseUrl, {
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+            reconnectionAttempts: 10,
+            timeout: 8000
+        });
         let globalGifts = []; let eq1Gifts = []; let eq2Gifts = [];
         
         function syncColors(pickerId, hexId, labelId) {

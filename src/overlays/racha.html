@@ -63,7 +63,7 @@
     <div class="block" id="bloque-diario" style="display:none;">
         <div class="heavy-text title-diario">🔥 TOP HOY 🔥</div>
         <div class="avatar-container" id="container-foto-diario">
-            <img src="" class="avatar" id="avatar-diario" onerror="this.src='https://via.placeholder.com/150/222/fff?text=?'">
+            <img src="" class="avatar" id="avatar-diario" onerror="this.src='https://www.gravatar.com/avatar/150/222/fff?text=?'">
             <div class="heavy-text coins-badge" id="coins-diario"></div>
         </div>
         <div class="heavy-text name" id="name-diario">ESPERANDO</div>
@@ -73,16 +73,17 @@
     <div class="block" id="bloque-historico" style="display:none;">
         <div class="heavy-text title-historico">🏆 TOP HISTÓRICO 🏆</div>
         <div class="avatar-container" id="container-foto-historico">
-            <img src="" class="avatar" id="avatar-historico" onerror="this.src='https://via.placeholder.com/150/222/fff?text=?'">
+            <img src="" class="avatar" id="avatar-historico" onerror="this.src='https://www.gravatar.com/avatar/150/222/fff?text=?'">
             <div class="heavy-text coins-badge" id="coins-historico"></div> 
         </div>
         <div class="heavy-text name" id="name-historico">ESPERANDO</div>
         <div class="heavy-text wins-historico" id="wins-historico">WINS X0</div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://localhost:23847/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        const baseUrl = 'ws://localhost:23847/';
+const socket = io(baseUrl);
 
         socket.on('racha_data_update', (data) => {
             if (!data) return;

@@ -21,7 +21,7 @@
         .user-info img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover;}
         .user-info div { display: flex; flex-direction: column; }
         .u-name { font-weight: bold; font-size: 13px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;}
-        .u-data { font-size: 12px; color: #ff003c; font-weight: bold;}
+        .u-data { font-size: 12px; color: #ffd700; font-weight: bold;}
         
         .btn-ctrl { background: #333; border: none; color: white; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; justify-content: center; align-items: center;}
         .btn-ctrl:hover { background: #555;}
@@ -41,29 +41,31 @@
 <body>
     <div class="box">
         <div class="top-row">
-            <div><h3 style="margin: 0; color: #00f2fe;"><i class="fa-solid fa-hand-pointer"></i> Gestión Top Tappers</h3></div>
+            <div><h3 style="margin: 0; color: #ffd700;"><i class="fa-solid fa-gem"></i> Gestión Top Donadores VIP</h3></div>
             <div style="display:flex; gap: 10px;">
-                <button class="btn-overlay" style="color:#00ff66; border-color:#00ff66;" onclick="window.open('/top_likes', '_blank')"><i class="fa-solid fa-eye"></i> Ver Overlay</button>
+                <button class="btn-overlay" style="color:#00ff66; border-color:#00ff66;" onclick="window.open('/overlays/top_donadores.html', '_blank')"><i class="fa-solid fa-eye"></i> Ver Overlay</button>
                 <button class="btn-overlay" onclick="copiarURL()"><i class="fa-solid fa-link"></i> Copiar URL OBS</button>
             </div>
         </div>
 
         <div class="racha-layout">
-            <div class="racha-col" style="border-color: #00f2fe;">
+            <div class="racha-col" style="border-color: #ffd700;">
                 
                 <div style="margin-bottom: 15px; background: #111; padding: 10px; border-radius: 8px; border: 1px solid #333;">
+                    <label style="color:#00f2fe; margin-bottom: 5px; font-size: 11px;">Ajustes del Overlay</label>
                     <div style="display:flex; gap:10px; align-items: center;">
+                        <input type="number" id="inp-vip-limit" min="1" max="10" value="2" style="margin:0; width:60px; text-align:center;" title="Cantidad a mostrar">
                         <label style="margin:0; color:#fff; display:flex; align-items:center; gap:5px; font-size:12px; cursor:pointer;">
-                            <input type="checkbox" id="inp-likes-mirror" style="width:16px; height:16px; accent-color: #00f2fe;"> Modo Espejo (Diseño invertido)
+                            <input type="checkbox" id="inp-vip-mirror" style="width:16px; height:16px; accent-color: #00f2fe;"> Modo Espejo
                         </label>
-                        <button class="btn-ctrl" style="width:auto; padding:0 15px; background:#00f2fe; color:black; font-size: 12px; margin-left:auto;" onclick="guardarOpcionesLikes()"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                        <button class="btn-ctrl" style="width:auto; padding:0 15px; background:#00f2fe; color:black; font-size: 12px; margin-left:auto;" onclick="guardarOpcionesVIP()"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
                     </div>
                 </div>
 
-                <h3 style="color:#00f2fe;">Ronda Actual (Tap Tap)</h3>
+                <h3 style="color:#ffd700;">Ronda Actual (Monedas)</h3>
                 <div class="user-list" id="lista-ronda"></div>
                 
-                <button class="btn-action btn-primary" onclick="cerrarRondaGlobal()"><i class="fa-solid fa-trophy"></i> Cerrar Ronda Global (+1 Win)</button>
+                <button class="btn-action btn-primary" style="background:#ffd700;" onclick="cerrarRondaGlobal()"><i class="fa-solid fa-trophy"></i> Cerrar Ronda Global (+1 Win)</button>
                 <button class="btn-action btn-danger" onclick="limpiarRonda()"><i class="fa-solid fa-eraser"></i> Limpiar Ronda Actual</button>
             </div>
 
@@ -76,23 +78,39 @@
         </div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://localhost:23847/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
-        
+        const baseUrl = 'ws://localhost:23847/';
+        const socket = io(baseUrl, {
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+            reconnectionAttempts: 10,
+            timeout: 8000
+        });
+        let focusKey = null;
+        let focusValue = "";
+
         socket.on('config_actual', (config) => {
-            if(config.topLikes && config.topLikes.mirrorMode !== undefined) {
-                document.getElementById('inp-likes-mirror').checked = config.topLikes.mirrorMode;
+            if(config.topVIP) {
+                if(config.topVIP.displayLimit) document.getElementById('inp-vip-limit').value = config.topVIP.displayLimit;
+                if(config.topVIP.mirrorMode !== undefined) document.getElementById('inp-vip-mirror').checked = config.topVIP.mirrorMode;
             }
         });
 
-        socket.on('top_likes_data_update', (data) => {
+        socket.on('top_vip_data_update', (data) => {
             if(!data) return;
             
+            if(document.activeElement && document.activeElement.id && document.activeElement.id.startsWith('inp-coin-')) {
+                focusKey = document.activeElement.id;
+                focusValue = document.activeElement.value;
+            } else {
+                focusKey = null;
+            }
+
             let lRonda = document.getElementById('lista-ronda'); 
             lRonda.innerHTML = '';
             
-            let arrRonda = Object.entries(data.currentRound).map(([u, d]) => ({userKey: u, ...d})).sort((a,b) => b.likes - a.likes);
+            let arrRonda = Object.entries(data.currentRound).map(([u, d]) => ({userKey: u, ...d})).sort((a,b) => b.coins - a.coins);
             
             arrRonda.forEach((u, index) => {
                 let badge = index === 0 ? '<i class="fa-solid fa-crown" style="color:gold;"></i>' : `#${index + 1}`;
@@ -101,11 +119,24 @@
                     <div class="user-info">
                         <span style="font-weight:bold; color:#888; width:20px;">${badge}</span>
                         <img src="${u.avatar}">
-                        <div><span class="u-name">${u.displayName}</span><span class="u-data"><i class="fa-solid fa-heart"></i> ${u.likes.toLocaleString()}</span></div>
+                        <div><span class="u-name">${u.displayName}</span><span class="u-data"><i class="fa-solid fa-coins"></i> ${u.coins.toLocaleString()}</span></div>
                     </div>
-                    <button class="btn-ctrl btn-del" onclick="eliminarRonda('${u.userKey}')"><i class="fa-solid fa-xmark"></i></button>
+                    
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <input type="number" id="inp-coin-${u.userKey}" style="width:45px; height:24px; margin:0; padding:0 4px; border:1px solid #555; background:#000; color:#00ff66; border-radius:4px; font-size:12px; font-weight:bold;" placeholder="+ Cant">
+                        <button class="btn-ctrl" style="color:#00ff66;" onclick="sumarCoinsRonda('${u.userKey}')" title="Sumar Monedas manualmente"><i class="fa-solid fa-plus"></i></button>
+                        <button class="btn-ctrl btn-del" onclick="eliminarRonda('${u.userKey}')" title="Eliminar"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
                 </div>`;
             });
+
+            if(focusKey) {
+                let el = document.getElementById(focusKey);
+                if(el) {
+                    el.focus();
+                    el.value = focusValue;
+                }
+            }
 
             let lHist = document.getElementById('lista-historial'); 
             lHist.innerHTML = '';
@@ -128,25 +159,35 @@
             });
         });
 
-        // 🌟 FUNCIÓN PARA GUARDAR MODO ESPEJO EN LIKES
-        function guardarOpcionesLikes() {
-            let mirror = document.getElementById('inp-likes-mirror').checked;
-            socket.emit('top_likes_guardar_opciones', { mirrorMode: mirror });
+        // 🌟 SE ACTUALIZÓ PARA ENVIAR EL MODO ESPEJO
+        function guardarOpcionesVIP() {
+            let limit = parseInt(document.getElementById('inp-vip-limit').value) || 2;
+            let mirror = document.getElementById('inp-vip-mirror').checked;
+            socket.emit('top_vip_guardar_opciones', { displayLimit: limit, mirrorMode: mirror });
+        }
+
+        function sumarCoinsRonda(key) {
+            let input = document.getElementById('inp-coin-' + key);
+            let amount = parseInt(input.value);
+            if(!isNaN(amount) && amount !== 0) {
+                socket.emit('top_vip_ajuste_ronda', { userKey: key, amount: amount });
+                input.value = ''; 
+            }
         }
 
         function cerrarRondaGlobal() { 
-            if(confirm("🏆 ¿Cerrar Ronda Global?\nSe le dará la victoria al Top 1 de Likes y al Top 1 de Donadores.")) {
+            if(confirm("🏆 ¿Cerrar Ronda Global?\nSe le dará la victoria al Top 1 de Donadores, Top Likes y Top Regalos a la vez.")) {
                 socket.emit('top_cerrar_ambas_rondas'); 
             }
         }
-        function limpiarRonda() { if(confirm("🚨 ¿Limpiar todos los likes de la ronda actual?")) socket.emit('top_likes_limpiar_ronda'); }
-        function limpiarHistorial() { if(confirm("🚨 ¿Borrar TODO el historial de victorias?")) socket.emit('top_likes_limpiar_historial'); }
+        function limpiarRonda() { if(confirm("🚨 ¿Limpiar todas las monedas de la ronda actual?")) socket.emit('top_vip_limpiar_ronda'); }
+        function limpiarHistorial() { if(confirm("🚨 ¿Borrar TODO el historial de victorias?")) socket.emit('top_vip_limpiar_historial'); }
         
-        function eliminarRonda(key) { socket.emit('top_likes_eliminar_ronda', key); }
-        function eliminarHistorial(key) { if(confirm("¿Eliminar usuario del historial?")) socket.emit('top_likes_eliminar_historial', key); }
-        function ajustarHistorial(key, amount) { socket.emit('top_likes_ajuste_historial', { userKey: key, amount: amount }); }
+        function eliminarRonda(key) { socket.emit('top_vip_eliminar_ronda', key); }
+        function eliminarHistorial(key) { if(confirm("¿Eliminar usuario del historial?")) socket.emit('top_vip_eliminar_historial', key); }
+        function ajustarHistorial(key, amount) { socket.emit('top_vip_ajuste_historial', { userKey: key, amount: amount }); }
 
-        function copiarURL() { navigator.clipboard.writeText(window.location.origin + '/top_likes'); alert("✅ Enlace copiado!"); }
+        function copiarURL() { navigator.clipboard.writeText(window.location.origin + '/overlays/top_donadores.html'); alert("✅ Enlace copiado!"); }
     </script>
 </body>
 </html>

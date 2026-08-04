@@ -3,12 +3,21 @@
   "version": "1.1.8",
   "description": "Widget interactivo para TikTok Live",
   "main": "server.js",
+  "type": "commonjs",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "pack:widget": "node scripts/pack-widget.js",
+    "serve:src": "http-server src -p 6068 -c-1",
+    "serve:dist": "http-server dist -p 8080 -c-1"
   },
   "dependencies": {
+    "cors": "^2.8.6",
     "express": "^4.18.2",
     "socket.io": "^4.7.2",
-    "tiktok-live-connector": "^2.1.1-beta1"
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "archiver": "^7.0.1",
+    "http-server": "^14.1.1"
   }
 }

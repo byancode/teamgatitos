@@ -162,16 +162,17 @@
             <div class="countdown-number" id="timer">30</div>
             
             <div id="winner-zone">
-                <img id="winner-avatar" src="https://via.placeholder.com/150/222/fff?text=?">
+                <img id="winner-avatar" src="https://www.gravatar.com/avatar/150/222/fff?text=?">
                 <div id="winner-title">¡TE REINICIÓ!</div>
                 <div id="winner-name">EL EQUIPO 2</div>
             </div>
         </div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://localhost:23847/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        const baseUrl = 'ws://localhost:23847/';
+const socket = io(baseUrl);
         
         let currentConfig = null;
         let timer = 30;
@@ -314,7 +315,7 @@
             let winnerTitle = document.getElementById('winner-title');
             let winnerName = document.getElementById('winner-name');
 
-            winnerImg.src = topReiniciar && topReiniciar.avatar ? topReiniciar.avatar : 'https://via.placeholder.com/150/222/fff?text=?';
+            winnerImg.src = topReiniciar && topReiniciar.avatar ? topReiniciar.avatar : 'https://www.gravatar.com/avatar/150/222/fff?text=?';
             winnerImg.style.borderColor = c2;
             winnerImg.style.boxShadow = `0 0 20px ${c2}`;
             
@@ -373,7 +374,7 @@
             let winnerTitle = document.getElementById('winner-title');
             let winnerName = document.getElementById('winner-name');
 
-            winnerImg.src = topSalvar && topSalvar.avatar ? topSalvar.avatar : 'https://via.placeholder.com/150/222/fff?text=?';
+            winnerImg.src = topSalvar && topSalvar.avatar ? topSalvar.avatar : 'https://www.gravatar.com/avatar/150/222/fff?text=?';
             winnerImg.style.borderColor = c1;
             winnerImg.style.boxShadow = `0 0 20px ${c1}`;
             

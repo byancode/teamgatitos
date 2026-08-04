@@ -93,14 +93,15 @@
         </div>
         
         <div style="display: flex; gap: 10px; margin-top: 20px;">
-            <button class="btn-overlay" onclick="window.open('/meta_likes', '_blank')"><i class="fa-solid fa-eye"></i> Ver Overlay</button>
+            <button class="btn-overlay" onclick="window.open('/overlays/meta_likes.html', '_blank')"><i class="fa-solid fa-eye"></i> Ver Overlay</button>
             <button class="btn-overlay" style="color:#ffd700; border-color:#ffd700;" onclick="copiarURL()"><i class="fa-solid fa-link"></i> Copiar URL OBS</button>
         </div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://localhost:23847/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        const baseUrl = 'ws://localhost:23847/';
+const socket = io(baseUrl);
 
         socket.on('config_actual', (config) => {
             if (config.metaLikes) {
@@ -164,8 +165,8 @@
         }
 
         function copiarURL() {
-            navigator.clipboard.writeText(window.location.origin + '/meta_likes');
-            alert("✅ Enlace copiado: " + window.location.origin + "/meta_likes");
+            navigator.clipboard.writeText(window.location.origin + '/overlays/meta_likes.html');
+            alert("✅ Enlace copiado: " + window.location.origin + "/overlays/meta_likes.html");
         }
     </script>
 </body>

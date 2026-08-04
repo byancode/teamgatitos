@@ -1,130 +1,199 @@
-const { WebcastPushConnection } = require('tiktok-live-connector');
+const { io: createSocketClient } = require('socket.io-client');
 
-// Mantenemos cooldowns por cada sala/usuario para no mezclar
+const GATIPROXY_URL = process.env.GATIPROXY_URL || 'http://localhost:21213';
+
 const saasCooldowns = new Map();
+
+function getSafeUserKey(data) {
+    return (
+        data?.user?.displayId ||
+        data?.user?.id ||
+        data?.user?.secUid ||
+        'anon'
+    );
+}
+
+function getDisplayName(data) {
+    const raw = data?.user?.nickname || data?.user?.displayId || 'Anónimo';
+    return raw.replace(/[^a-zA-Z0-9\sÁÉÍÓÚáéíóúÑñ]/g, '').trim() || 'Anónimo';
+}
+
+function getAvatarUrl(data) {
+    const urls = [
+        data?.user?.avatarThumb?.urlList?.[0],
+        data?.user?.avatarMedium?.urlList?.[0],
+        data?.user?.avatarLarge?.urlList?.[0],
+        data?.user?.profilePictureUrls?.[0],
+        data?.profilePictureUrl
+    ];
+    return urls.find(Boolean) || '';
+}
+
+function normalizeUsername(username) {
+    return String(username || '').replace('@', '').trim();
+}
 
 function setupGameEvents(io, configGlobal) {
     console.log("🎮 Motor SaaS Venta iniciado. Esperando clientes...");
 
     io.on('connection', (socket) => {
-        let myTikTokConnection = null;
+        let myProxySocket = null;
         let currentTikTokUser = null;
 
-        socket.on('saas_conectar', (tiktokUsername) => {
-            let userLimpio = tiktokUsername.replace('@', '').trim();
-            if (!userLimpio) return;
+        function cleanupProxyConnection() {
+            if (!myProxySocket) return;
 
-            // Si el cliente ya estaba escuchando a alguien, desconectamos la anterior
-            if (myTikTokConnection) {
-                try { myTikTokConnection.disconnect(); } catch (e) {}
+            const usernameToDisconnect = currentTikTokUser;
+            if (usernameToDisconnect) {
+                myProxySocket.emit('proxy:disconnect', usernameToDisconnect, () => {});
             }
 
-            currentTikTokUser = userLimpio;
-            socket.emit('saas_estado', { estado: 'conectando', msg: `🟡 Conectando a @${userLimpio}...` });
+            try { myProxySocket.disconnect(); } catch (e) {}
+            myProxySocket = null;
+        }
 
-            myTikTokConnection = new WebcastPushConnection(userLimpio);
+        function processSessionEvent(payload) {
+            const event = payload?.event;
+            const data = payload?.data || {};
+            const bolitaConf = (configGlobal && configGlobal.bolita) ? configGlobal.bolita : {};
 
-            myTikTokConnection.connect().then(() => {
-                socket.emit('saas_estado', { estado: 'conectado', msg: `🟢 Escuchando a @${userLimpio}` });
-                console.log(`✅ [SaaS] Cliente conectado al Live de: @${userLimpio}`);
-                
-                // 1. REGALOS VIP (Muestra foto y nombre)
-                myTikTokConnection.on('gift', (data) => {
-                    if (data.giftType === 1 && !data.repeatEnd) return;
-                    const totalCoins = data.diamondCount * data.repeatCount;
-                    if (totalCoins > 0) {
-                        let cleanName = (data.nickname || data.uniqueId).replace(/[^a-zA-Z0-9\sÁÉÍÓÚáéíóúÑñ]/g, '').trim();
-                        let avatarUrl = (data.userDetails && data.userDetails.profilePictureUrls && data.userDetails.profilePictureUrls.length > 0) ? data.userDetails.profilePictureUrls[0] : "";
-                        
-                        let cantidadFinal = 0;
-                        const bolitaConf = (configGlobal && configGlobal.bolita) ? configGlobal.bolita : {};
+            if (event === 'gift') {
+                const repeatEnd = Number(data.repeatEnd || 0);
+                const giftType = Number(data?.gift?.type || 0);
+                if (giftType === 1 && repeatEnd !== 1) return;
 
-                        // Detecta el "Quiéreme"
-                        if (data.giftId === 7934 || data.giftId === "7934") {
-                            let quiereMeGlobos = bolitaConf.quiereMeGlobos !== undefined ? bolitaConf.quiereMeGlobos : 60;
-                            cantidadFinal = quiereMeGlobos * data.repeatCount;
-                        } else {
-                            let multiplicador = bolitaConf.multiplicador !== undefined ? bolitaConf.multiplicador : 2;
-                            cantidadFinal = totalCoins * multiplicador;
-                        }
-                        
-                        socket.emit('saas_game_gift', { usuario: cleanName, avatar: avatarUrl, monedas: totalCoins, cantidadGlobos: cantidadFinal });
+                const repeatCount = parseInt(data.repeatCount || data.comboCount || 1, 10) || 1;
+                const diamondCount = parseInt(data?.gift?.diamondCount || data.diamondCount || 0, 10) || 0;
+                const totalCoins = diamondCount * repeatCount;
+
+                if (totalCoins > 0) {
+                    const cleanName = getDisplayName(data);
+                    const avatarUrl = getAvatarUrl(data);
+
+                    let cantidadFinal = 0;
+
+                    if (String(data.giftId) === '7934') {
+                        const quiereMeGlobos = bolitaConf.quiereMeGlobos !== undefined ? bolitaConf.quiereMeGlobos : 60;
+                        cantidadFinal = quiereMeGlobos * repeatCount;
+                    } else {
+                        const multiplicador = bolitaConf.multiplicador !== undefined ? bolitaConf.multiplicador : 2;
+                        cantidadFinal = totalCoins * multiplicador;
                     }
-                });
 
-                // 2. CHAT (Modo Sigilo)
-                myTikTokConnection.on('chat', (data) => {
-                    const bolitaConf = (configGlobal && configGlobal.bolita) ? configGlobal.bolita : {};
-                    if (bolitaConf.allowFree === false) return; // Filtro de apagar cosas gratis
+                    socket.emit('saas_game_gift', { usuario: cleanName, avatar: avatarUrl, monedas: totalCoins, cantidadGlobos: cantidadFinal });
+                }
+                return;
+            }
 
-                    const texto = data.comment.toLowerCase();
-                    const user = data.uniqueId;
-                    const wordsStr = (bolitaConf.chatWord || "globos").toLowerCase();
-                    const wordsArray = wordsStr.split(',').map(w => w.trim()).filter(w => w.length > 0);
-                    const match = wordsArray.find(word => texto.includes(word));
+            if (bolitaConf.allowFree === false) return;
 
-                    if (match) {
-                        const cooldownSecs = bolitaConf.chatCooldown !== undefined ? bolitaConf.chatCooldown : 60;
-                        const mapKey = `chat_${currentTikTokUser}_${user}`;
-                        const now = Date.now();
-                        const userLastTime = saasCooldowns.get(mapKey) || 0;
+            if (event === 'chat') {
+                const texto = String(data.content || '').toLowerCase();
+                const user = getSafeUserKey(data);
+                const wordsStr = (bolitaConf.chatWord || "globos").toLowerCase();
+                const wordsArray = wordsStr.split(',').map(w => w.trim()).filter(w => w.length > 0);
+                const match = wordsArray.find(word => texto.includes(word));
 
-                        if ((now - userLastTime) / 1000 >= cooldownSecs) {
-                            saasCooldowns.set(mapKey, now);
-                            socket.emit('saas_game_chat', { cantidadGlobos: bolitaConf.chatGlobos || 1 });
-                        }
-                    }
-                });
-
-                // 3. LIKES (Modo Sigilo)
-                myTikTokConnection.on('like', (data) => {
-                    const bolitaConf = (configGlobal && configGlobal.bolita) ? configGlobal.bolita : {};
-                    if (bolitaConf.allowFree === false) return;
-
-                    const likesMeta = bolitaConf.likesMeta || 50;
-                    if (data.likeCount >= likesMeta) {
-                        socket.emit('saas_game_like', { cantidadGlobos: bolitaConf.likesGlobos || 1 });
-                    }
-                });
-
-                // 4. FOLLOWS (Modo Sigilo)
-                myTikTokConnection.on('follow', (data) => {
-                    const bolitaConf = (configGlobal && configGlobal.bolita) ? configGlobal.bolita : {};
-                    if (bolitaConf.allowFree === false) return;
-
-                    const user = data.uniqueId;
-                    const cooldownSecs = bolitaConf.followCooldown !== undefined ? bolitaConf.followCooldown : 300;
-                    const mapKey = `follow_${currentTikTokUser}_${user}`;
+                if (match) {
+                    const cooldownSecs = bolitaConf.chatCooldown !== undefined ? bolitaConf.chatCooldown : 60;
+                    const mapKey = `chat_${currentTikTokUser}_${user}`;
                     const now = Date.now();
                     const userLastTime = saasCooldowns.get(mapKey) || 0;
 
                     if ((now - userLastTime) / 1000 >= cooldownSecs) {
                         saasCooldowns.set(mapKey, now);
-                        socket.emit('saas_game_follow', { cantidadGlobos: bolitaConf.followGlobos || 5 });
+                        socket.emit('saas_game_chat', { cantidadGlobos: bolitaConf.chatGlobos || 1 });
                     }
+                }
+                return;
+            }
+
+            if (event === 'like') {
+                const likesMeta = bolitaConf.likesMeta || 50;
+                const batchLikes = parseInt(data.count || 0, 10) || 0;
+                if (batchLikes >= likesMeta) {
+                    socket.emit('saas_game_like', { cantidadGlobos: bolitaConf.likesGlobos || 1 });
+                }
+                return;
+            }
+
+            if (event === 'follow') {
+                const user = getSafeUserKey(data);
+                const cooldownSecs = bolitaConf.followCooldown !== undefined ? bolitaConf.followCooldown : 300;
+                const mapKey = `follow_${currentTikTokUser}_${user}`;
+                const now = Date.now();
+                const userLastTime = saasCooldowns.get(mapKey) || 0;
+
+                if ((now - userLastTime) / 1000 >= cooldownSecs) {
+                    saasCooldowns.set(mapKey, now);
+                    socket.emit('saas_game_follow', { cantidadGlobos: bolitaConf.followGlobos || 5 });
+                }
+            }
+        }
+
+        socket.on('saas_conectar', (tiktokUsername) => {
+            const userLimpio = normalizeUsername(tiktokUsername);
+            if (!userLimpio) return;
+
+            cleanupProxyConnection();
+
+            currentTikTokUser = userLimpio;
+            socket.emit('saas_estado', { estado: 'conectando', msg: `🟡 Conectando a @${userLimpio}...` });
+
+            myProxySocket = createSocketClient(GATIPROXY_URL, {
+                transports: ['websocket', 'polling'],
+                reconnection: true
+            });
+
+            myProxySocket.on('connect', () => {
+                myProxySocket.emit('proxy:connect', userLimpio, (response) => {
+                    if (!response?.ok) {
+                        socket.emit('saas_estado', { estado: 'error', msg: `❌ Error: ${response?.error || 'No se pudo conectar'}` });
+                        return;
+                    }
+
+                    if (response?.session?.status === 'error') {
+                        socket.emit('saas_estado', { estado: 'error', msg: `❌ Error: ${response?.session?.lastError || 'No en Live o no existe'}` });
+                        return;
+                    }
+
+                    socket.emit('saas_estado', { estado: 'conectado', msg: `🟢 Escuchando a @${userLimpio}` });
+                    console.log(`✅ [SaaS] Cliente conectado al Live de: @${userLimpio}`);
                 });
-
-            }).catch(err => {
-                socket.emit('saas_estado', { estado: 'error', msg: `❌ Error: No en Live o no existe` });
-                myTikTokConnection = null;
             });
 
-            myTikTokConnection.on('streamEnd', () => {
-                socket.emit('saas_estado', { estado: 'error', msg: `⬛ Live terminado` });
-                try { myTikTokConnection.disconnect(); } catch(e){}
+            myProxySocket.on('proxy:update', (message) => {
+                const type = message?.type;
+                const payload = message?.payload || {};
+
+                if (payload.username !== currentTikTokUser) return;
+
+                if (type === 'session-event') {
+                    if (payload.event === 'streamEnd') {
+                        socket.emit('saas_estado', { estado: 'error', msg: '⬛ Live terminado' });
+                        return;
+                    }
+                    processSessionEvent(payload);
+                    return;
+                }
+
+                if (type === 'session-disconnected') {
+                    socket.emit('saas_estado', { estado: 'error', msg: '🔴 Desconectado de TikTok' });
+                    return;
+                }
+
+                if (type === 'session-error') {
+                    socket.emit('saas_estado', { estado: 'error', msg: `❌ Error: ${payload.error || 'Error de sesión'}` });
+                }
             });
 
-            myTikTokConnection.on('disconnected', () => {
-                socket.emit('saas_estado', { estado: 'error', msg: `🔴 Desconectado de TikTok` });
-                try { myTikTokConnection.disconnect(); } catch(e){}
+            myProxySocket.on('connect_error', () => {
+                socket.emit('saas_estado', { estado: 'error', msg: '❌ Error: No se pudo conectar a Gatiproxy' });
             });
         });
 
-        // Limpieza si el cliente cierra la pestaña del juego
         socket.on('disconnect', () => {
-            if (myTikTokConnection) {
-                try { myTikTokConnection.disconnect(); } catch (e) {}
-            }
+            cleanupProxyConnection();
         });
     });
 }
