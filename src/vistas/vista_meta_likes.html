@@ -93,7 +93,7 @@
         </div>
         
         <div style="display: flex; gap: 10px; margin-top: 20px;">
-            <button class="btn-overlay" onclick="window.open('/overlays/meta_likes.html', '_blank')"><i class="fa-solid fa-eye"></i> Ver Overlay</button>
+            <button class="btn-overlay" onclick="window.open('./overlays/meta_likes.html', '_blank')"><i class="fa-solid fa-eye"></i> Ver Overlay</button>
             <button class="btn-overlay" style="color:#ffd700; border-color:#ffd700;" onclick="copiarURL()"><i class="fa-solid fa-link"></i> Copiar URL OBS</button>
         </div>
     </div>
@@ -165,8 +165,8 @@ const socket = io(baseUrl);
         }
 
         function copiarURL() {
-            navigator.clipboard.writeText(window.location.origin + '/overlays/meta_likes.html');
-            alert("✅ Enlace copiado: " + window.location.origin + "/overlays/meta_likes.html");
+            navigator.clipboard.writeText('https://teamgatitos.byancode.com/overlays/meta_likes.html');
+            alert("✅ Enlace copiado: " + "https://teamgatitos.byancode.com/overlays/meta_likes.html");
         }
     </script>
 </body>

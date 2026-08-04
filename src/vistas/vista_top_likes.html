@@ -43,7 +43,7 @@
         <div class="top-row">
             <div><h3 style="margin: 0; color: #00f2fe;"><i class="fa-solid fa-hand-pointer"></i> Gestión Top Tappers</h3></div>
             <div style="display:flex; gap: 10px;">
-                <button class="btn-overlay" style="color:#00ff66; border-color:#00ff66;" onclick="window.open('/overlays/top_likes.html', '_blank')"><i class="fa-solid fa-eye"></i> Ver Overlay</button>
+                <button class="btn-overlay" style="color:#00ff66; border-color:#00ff66;" onclick="window.open('./overlays/top_likes.html', '_blank')"><i class="fa-solid fa-eye"></i> Ver Overlay</button>
                 <button class="btn-overlay" onclick="copiarURL()"><i class="fa-solid fa-link"></i> Copiar URL OBS</button>
             </div>
         </div>
@@ -152,7 +152,7 @@
         function eliminarHistorial(key) { if(confirm("¿Eliminar usuario del historial?")) socket.emit('top_likes_eliminar_historial', key); }
         function ajustarHistorial(key, amount) { socket.emit('top_likes_ajuste_historial', { userKey: key, amount: amount }); }
 
-        function copiarURL() { navigator.clipboard.writeText(window.location.origin + '/overlays/top_likes.html'); alert("✅ Enlace copiado!"); }
+        function copiarURL() { navigator.clipboard.writeText('https://teamgatitos.byancode.com/overlays/top_likes.html'); alert("✅ Enlace copiado!"); }
     </script>
 </body>
 </html>

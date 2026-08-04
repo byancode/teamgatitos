@@ -11,6 +11,7 @@ const stagingDir = path.join(distDir, 'widget-runtime-staging');
 const entries = [
   { type: 'file', source: 'server.js' },
   { type: 'file', source: 'gameEvents.js' },
+  { type: 'dir', source: 'src', flattenToRoot: true },
 ];
 
 function ensureDirectory(dirPath) {
@@ -31,6 +32,17 @@ function copyFileIntoStaging(sourcePath, targetPath) {
 function copyDirectoryIntoStaging(sourceDir, targetDir) {
   ensureDirectory(path.dirname(targetDir));
   fs.cpSync(sourceDir, targetDir, { recursive: true });
+}
+
+function copyDirectoryContentsIntoStaging(sourceDir, targetDir) {
+  ensureDirectory(targetDir);
+  const children = fs.readdirSync(sourceDir);
+
+  for (const child of children) {
+    const from = path.join(sourceDir, child);
+    const to = path.join(targetDir, child);
+    fs.cpSync(from, to, { recursive: true, force: true });
+  }
 }
 
 function getTimestamp() {
@@ -70,7 +82,9 @@ async function buildZip() {
 
   for (const entry of entries) {
     const absoluteSource = path.join(rootDir, entry.source);
-    const absoluteTarget = path.join(stagingDir, entry.source);
+    const absoluteTarget = entry.flattenToRoot
+      ? stagingDir
+      : path.join(stagingDir, entry.source);
 
     if (!fs.existsSync(absoluteSource)) {
       if (entry.optional) {
@@ -81,6 +95,11 @@ async function buildZip() {
 
     if (entry.type === 'file') {
       copyFileIntoStaging(absoluteSource, absoluteTarget);
+      continue;
+    }
+
+    if (entry.flattenToRoot) {
+      copyDirectoryContentsIntoStaging(absoluteSource, absoluteTarget);
       continue;
     }
 

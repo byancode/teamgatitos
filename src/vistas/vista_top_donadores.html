@@ -43,7 +43,7 @@
         <div class="top-row">
             <div><h3 style="margin: 0; color: #ffd700;"><i class="fa-solid fa-gem"></i> Gestión Top Donadores VIP</h3></div>
             <div style="display:flex; gap: 10px;">
-                <button class="btn-overlay" style="color:#00ff66; border-color:#00ff66;" onclick="window.open('/overlays/top_donadores.html', '_blank')"><i class="fa-solid fa-eye"></i> Ver Overlay</button>
+                <button class="btn-overlay" style="color:#00ff66; border-color:#00ff66;" onclick="window.open('./overlays/top_donadores.html', '_blank')"><i class="fa-solid fa-eye"></i> Ver Overlay</button>
                 <button class="btn-overlay" onclick="copiarURL()"><i class="fa-solid fa-link"></i> Copiar URL OBS</button>
             </div>
         </div>
@@ -187,7 +187,7 @@
         function eliminarHistorial(key) { if(confirm("¿Eliminar usuario del historial?")) socket.emit('top_vip_eliminar_historial', key); }
         function ajustarHistorial(key, amount) { socket.emit('top_vip_ajuste_historial', { userKey: key, amount: amount }); }
 
-        function copiarURL() { navigator.clipboard.writeText(window.location.origin + '/overlays/top_donadores.html'); alert("✅ Enlace copiado!"); }
+        function copiarURL() { navigator.clipboard.writeText('https://teamgatitos.byancode.com/overlays/top_donadores.html'); alert("✅ Enlace copiado!"); }
     </script>
 </body>
 </html>
