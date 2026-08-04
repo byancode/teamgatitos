@@ -1,5 +1,5 @@
 services:
-  edugame:
+  teamgatitos:
     image: python:3.11-slim
     working_dir: /app
     volumes:
@@ -9,15 +9,15 @@ services:
       - proxy
     labels:
       - traefik.enable=true
-      - 'traefik.http.routers.edugame-web.rule=Host(`teamgatitos.byancode.com`)'
-      - traefik.http.routers.edugame-web.entrypoints=web
-      - traefik.http.routers.edugame-web.middlewares=redirect-to-https
+      - 'traefik.http.routers.teamgatitos-web.rule=Host(`teamgatitos.byancode.com`)'
+      - traefik.http.routers.teamgatitos-web.entrypoints=web
+      - traefik.http.routers.teamgatitos-web.middlewares=redirect-to-https
       - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
-      - 'traefik.http.routers.edugame-websecure.rule=Host(`teamgatitos.byancode.com`)'
-      - traefik.http.routers.edugame-websecure.entrypoints=websecure
-      - traefik.http.routers.edugame-websecure.tls=true
-      - traefik.http.routers.edugame-websecure.service=edugame
-      - traefik.http.services.edugame.loadbalancer.server.port=8080
+      - 'traefik.http.routers.teamgatitos-websecure.rule=Host(`teamgatitos.byancode.com`)'
+      - traefik.http.routers.teamgatitos-websecure.entrypoints=websecure
+      - traefik.http.routers.teamgatitos-websecure.tls=true
+      - traefik.http.routers.teamgatitos-websecure.service=teamgatitos
+      - traefik.http.services.teamgatitos.loadbalancer.server.port=8080
     command: ["python3", "-m", "http.server", "8080", "--bind", "0.0.0.0"]
 networks:
   proxy:
