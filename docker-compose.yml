@@ -18,8 +18,6 @@ services:
       - traefik.http.routers.edugame-websecure.tls=true
       - traefik.http.routers.edugame-websecure.service=edugame
       - traefik.http.services.edugame.loadbalancer.server.port=8080
-    ports:
-      - 8080:8080
     command: ["python3", "-m", "http.server", "8080", "--bind", "0.0.0.0"]
 networks:
   proxy:
