@@ -50,7 +50,8 @@ app.use(
         allowedHeaders: ['Content-Type', 'Authorization']
     })
 );
-// app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.use(express.static(__dirname));
+app.get('/', (_req, res) => res.send('{"status": "ok", "message": "GatiApp TikTok Widget Server is running."}'));
 
 // app.get('/vista_conexion', (req, res) => res.sendFile(path.join(__dirname, 'vistas', 'vista_conexion.html')));
 // app.get('/vista_versus', (req, res) => res.sendFile(path.join(__dirname, 'vistas', 'vista_versus.html')));
